@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Trip {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  name   String
+  cities City[]
+}
+
+model City {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  transport String
+  startDate String
+  endDate   String
+  posX      Float      @default(100)
+  posY      Float      @default(300)
+  tripId    String     @db.ObjectId
+  trip      Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities Activity[]
+}
+
+model Activity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String
+  color     String
+  startTime String
+  endTime   String
+  notes     String?
+  date      String
+  cityId    String   @db.ObjectId
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Journey Line - Travel Planner</title>
+    <link rel="stylesheet" href="style2.css" />
+  </head>
+  <body>
+    <!-- Main Container -->
+    <div id="app">
+      <!-- Header -->
+      <header>
+        <div class="header-left">
+          <button id="backBtn" class="back-btn hidden">
+            <img
+              src="icons/back_arrow_icon.svg"
+              alt="Back"
+              class="back-arrow-icon"
+            />
+          </button>
+          <h1 id="pageTitle">My trips</h1>
+        </div>
+        <button id="journeyLineBtn" class="journey-line-btn">
+          <img
+            src="icons/journey_line_logo.svg"
+            alt="Journey Line"
+            class="journey-line-logo"
+          />
+        </button>
+      </header>
+
+      <!-- My Trips View -->
+      <div id="myTripsView" class="view active">
+        <div id="tripsList" class="trips-list"></div>
+      </div>
+
+      <!-- Trash Zone (visible on all views) -->
+      <div id="trashZone" class="trash-zone">
+        <img
+          src="icons/garbage_icon.svg"
+          alt="Delete"
+          class="garbage-icon-img"
+        />
+      </div>
+
+      <!-- Trip Detail View -->
+      <div id="tripDetailView" class="view">
+        <p class="subtitle">Select city to start planning</p>
+        <div id="citiesCanvas" class="cities-canvas"></div>
+      </div>
+
+      <!-- City Timeline View -->
+      <div id="timelineView" class="view">
+        <div class="timeline-header">
+          <h2 id="cityName">City Name</h2>
+          <button id="addActivityBtn" class="add-activity-btn">
+            <img src="icons/add_icon.svg" alt="Add" class="add-icon-inline" />
+            Click To Add An Activity
+          </button>
+        </div>
+        <div id="timelineContainer" class="timeline-container">
+          <div class="timeline-header-bar">
+            <div class="time-marker">
+              <img src="icons/moon.png" class="time-icon" alt="Night" />
+              <span>12 AM</span>
+            </div>
+            <div class="time-marker">
+              <span>6 AM</span>
+            </div>
+            <div class="time-marker">
+              <img src="icons/sun.png" class="time-icon" alt="Day" />
+              <span>12 PM</span>
+            </div>
+            <div class="time-marker">
+              <span>6 PM</span>
+            </div>
+            <div class="time-marker">
+              <img src="icons/moon.png" class="time-icon" alt="Night" />
+              <span>12 AM</span>
+            </div>
+          </div>
+          <div id="timelineDays" class="timeline-days"></div>
+        </div>
+      </div>
+
+      <!-- Modal for Adding Trip -->
+      <div id="addTripModal" class="modal">
+        <div class="modal-content">
+          <button class="modal-close" id="closeTripModal">
+            <img src="icons/x_icon.svg" alt="Close" class="x-icon" />
+          </button>
+          <h2>Name your trip</h2>
+          <input
+            type="text"
+            id="tripName"
+            placeholder="Enter trip name"
+            class="input-field"
+          />
+
+          <div id="citiesContainer">
+            <!-- Cities will be added here by JavaScript -->
+          </div>
+
+          <button id="addCityBtn" class="add-city-btn">
+            <img src="icons/add_icon.svg" alt="Add" /> Add city
+          </button>
+
+          <button id="saveTripBtn" class="save-btn">Save</button>
+        </div>
+      </div>
+
+      <!-- Modal for Adding City to Existing Trip -->
+      <div id="addCityModal" class="modal">
+        <div class="modal-content">
+          <button class="modal-close" id="closeCityModal">
+            <img src="icons/x_icon.svg" alt="Close" class="x-icon" />
+          </button>
+          <h3>What city are you visiting?</h3>
+          <input
+            type="text"
+            id="newCityName"
+            class="input-field"
+            placeholder="Enter city name"
+          />
+
+          <h3>How will you get there?</h3>
+          <div class="transport-options" id="cityTransportOptions">
+            <button class="transport-btn" data-transport="flight">
+              Flight
+            </button>
+            <button class="transport-btn" data-transport="train">Train</button>
+            <button class="transport-btn" data-transport="bus">Bus</button>
+            <button class="transport-btn" data-transport="ride">Ride</button>
+            <button class="transport-btn" data-transport="ferry">Ferry</button>
+          </div>
+
+          <h3>How long will you stay there?</h3>
+          <div class="date-range">
+            <input type="date" class="date-input" id="newCityStartDate" />
+            <span class="date-separator">to</span>
+            <input type="date" class="date-input" id="newCityEndDate" />
+          </div>
+
+          <button id="addNewCityBtn" class="add-city-btn">
+            <img src="icons/add_icon.svg" alt="Add" /> Add city
+          </button>
+
+          <button id="saveCityBtn" class="save-btn">Save</button>
+        </div>
+      </div>
+
+      <!-- Modal for Adding Activity -->
+      <div id="addActivityModal" class="modal">
+        <div class="modal-content">
+          <button class="modal-close" id="closeActivityModal">
+            <img src="icons/x_icon.svg" alt="Close" class="x-icon" />
+          </button>
+          <h2>Name your activity</h2>
+          <input
+            type="text"
+            id="activityName"
+            placeholder="Enter activity name"
+            class="input-field"
+          />
+
+          <h3>Type of activity</h3>
+          <div class="activity-types">
+            <button
+              class="activity-type-btn"
+              data-type="museum"
+              data-color="#F4D03F"
+            >
+              Museum
+            </button>
+            <button
+              class="activity-type-btn"
+              data-type="commute"
+              data-color="#85C1E9"
+            >
+              Commute
+            </button>
+            <button
+              class="activity-type-btn"
+              data-type="restaurant"
+              data-color="#EC7063"
+            >
+              Restaurant
+            </button>
+            <button
+              class="activity-type-btn"
+              data-type="concert"
+              data-color="#BB8FCE"
+            >
+              Concert
+            </button>
+            <button
+              class="activity-type-btn"
+              data-type="other"
+              data-color="#82E0AA"
+            >
+              Other
+            </button>
+          </div>
+
+          <h3>Which day?</h3>
+          <input type="date" id="activityDate" class="date-input" />
+
+          <h3>Activity duration</h3>
+          <div class="time-range">
+            <input type="time" id="activityStartTime" class="time-input" />
+            <span class="date-separator">to</span>
+            <input type="time" id="activityEndTime" class="time-input" />
+          </div>
+
+          <h3>Add Notes</h3>
+          <textarea
+            id="activityNotes"
+            placeholder="Add any notes here..."
+            class="textarea-field"
+          ></textarea>
+
+          <div class="modal-actions">
+            <button id="deleteActivityBtn" class="delete-btn">
+              <img
+                src="icons/garbage_icon.svg"
+                alt="Delete"
+                class="garbage-icon-img-white"
+              />
+            </button>
+            <button id="saveActivityBtn" class="save-btn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="app2.js"></script>
+  </body>
+</html>
