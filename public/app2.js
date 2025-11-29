@@ -22,11 +22,10 @@ const addCityModal = document.getElementById("addCityModal");
 const addActivityModal = document.getElementById("addActivityModal");
 
 // API Base URL
-//const API_URL = window.location.origin + "/api";
+const API_URL = window.location.origin + "/api";
 // Use the FULL deployment URL
 //const API_URL = 'https://p2haniyagalejandra-juizppkv8-alejandra-fores-projects.vercel.app/api';
-const API_URL =
-  "https://p2haniyagalejandra-juizppkv8-alejandra-fores-projects.vercel.app/api";
+//const API_URL = "https://p2haniyagalejandra-juizppkv8-alejandra-fores-projects.vercel.app/api";
 
 // Log startup info
 console.log("=== APP STARTUP ===");
