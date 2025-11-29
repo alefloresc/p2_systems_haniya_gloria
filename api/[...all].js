@@ -2,80 +2,120 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Router for all API requests
 export default async function handler(req, res) {
-  // Extract the path after /api/
+  // Get the full URL
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
+  const method = req.method;
 
-  console.log("Request:", req.method, pathname);
+  // Log every request
+  console.log("========================================");
+  console.log("API Request:", method, pathname);
+  console.log("========================================");
 
-  // Set CORS headers
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PATCH, DELETE, OPTIONS"
   );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).json({});
+  if (method === "OPTIONS") {
+    return res.status(200).end();
   }
 
   try {
-    // ----- TEST ENDPOINT -----
+    // ====================
+    // TEST ENDPOINT
+    // ====================
     if (pathname === "/api/test") {
-      return res
-        .status(200)
-        .json({ status: "API working", timestamp: new Date().toISOString() });
+      return res.status(200).json({
+        status: "API working",
+        timestamp: new Date().toISOString(),
+      });
     }
 
-    // ----- TRIPS -----
-    if (pathname === "/api/trips") {
-      if (req.method === "GET") {
-        const trips = await prisma.trip.findMany({
-          include: { cities: { include: { activities: true } } },
-        });
-        return res.status(200).json(trips);
-      }
+    // ====================
+    // TRIPS
+    // ====================
 
-      if (req.method === "POST") {
-        const { name, cities } = req.body;
-        const trip = await prisma.trip.create({
-          data: {
-            name,
-            cities: {
-              create: cities.map((city) => ({
-                name: city.name,
-                transport: city.transport,
-                startDate: city.startDate,
-                endDate: city.endDate,
-                posX: city.position?.x || 100,
-                posY: city.position?.y || 300,
-              })),
-            },
+    // GET all trips
+    if (pathname === "/api/trips" && method === "GET") {
+      console.log("→ Getting all trips");
+      const trips = await prisma.trip.findMany({
+        include: {
+          cities: {
+            include: { activities: true },
           },
-          include: { cities: { include: { activities: true } } },
+        },
+      });
+      console.log("✓ Found", trips.length, "trips");
+      return res.status(200).json(trips);
+    }
+
+    // POST new trip
+    if (pathname === "/api/trips" && method === "POST") {
+      console.log("→ Creating trip");
+      const { name, cities } = req.body;
+      const trip = await prisma.trip.create({
+        data: {
+          name,
+          cities: {
+            create: cities.map((city) => ({
+              name: city.name,
+              transport: city.transport,
+              startDate: city.startDate,
+              endDate: city.endDate,
+              posX: city.position?.x || 100,
+              posY: city.position?.y || 300,
+            })),
+          },
+        },
+        include: {
+          cities: {
+            include: { activities: true },
+          },
+        },
+      });
+      console.log("✓ Created trip:", trip.id);
+      return res.status(201).json(trip);
+    }
+
+    // DELETE trip
+    if (pathname.startsWith("/api/trips/") && method === "DELETE") {
+      const parts = pathname.split("/");
+      const tripId = parts[parts.length - 1];
+
+      console.log("→ Deleting trip:", tripId);
+
+      if (!tripId || tripId === "trips") {
+        console.log("✗ Invalid trip ID");
+        return res.status(400).json({ error: "Invalid trip ID" });
+      }
+
+      try {
+        await prisma.trip.delete({
+          where: { id: tripId },
         });
-        return res.status(201).json(trip);
+        console.log("✓ Trip deleted successfully");
+        return res.status(200).json({ success: true, message: "Trip deleted" });
+      } catch (error) {
+        console.error("✗ Error deleting trip:", error.message);
+        return res.status(500).json({
+          error: "Failed to delete trip",
+          details: error.message,
+        });
       }
     }
 
-    // DELETE trip by ID in URL
-    if (
-      pathname.match(/^\/api\/trips\/[a-zA-Z0-9]+$/) &&
-      req.method === "DELETE"
-    ) {
-      const tripId = pathname.split("/").pop();
-      await prisma.trip.delete({ where: { id: tripId } });
-      return res.status(200).json({ success: true });
-    }
+    // ====================
+    // CITIES
+    // ====================
 
-    // ----- CITIES -----
-    if (pathname === "/api/cities" && req.method === "POST") {
+    // POST new city
+    if (pathname === "/api/cities" && method === "POST") {
+      console.log("→ Creating city");
       const { tripId, name, transport, startDate, endDate, position } =
         req.body;
       const city = await prisma.city.create({
@@ -90,39 +130,72 @@ export default async function handler(req, res) {
         },
         include: { activities: true },
       });
+      console.log("✓ Created city:", city.id);
       return res.status(201).json(city);
     }
 
-    // UPDATE city position by ID in URL
-    if (
-      pathname.match(/^\/api\/cities\/[a-zA-Z0-9]+$/) &&
-      req.method === "PATCH"
-    ) {
-      const cityId = pathname.split("/").pop();
+    // PATCH city
+    if (pathname.startsWith("/api/cities/") && method === "PATCH") {
+      const parts = pathname.split("/");
+      const cityId = parts[parts.length - 1];
+
+      console.log("→ Updating city:", cityId);
       const { position } = req.body;
-      const city = await prisma.city.update({
-        where: { id: cityId },
-        data: {
-          posX: position?.x,
-          posY: position?.y,
-        },
-        include: { activities: true },
-      });
-      return res.status(200).json(city);
+
+      try {
+        const city = await prisma.city.update({
+          where: { id: cityId },
+          data: {
+            posX: position?.x,
+            posY: position?.y,
+          },
+          include: { activities: true },
+        });
+        console.log("✓ City updated");
+        return res.status(200).json(city);
+      } catch (error) {
+        console.error("✗ Error updating city:", error.message);
+        return res.status(500).json({
+          error: "Failed to update city",
+          details: error.message,
+        });
+      }
     }
 
-    // DELETE city by ID in URL
-    if (
-      pathname.match(/^\/api\/cities\/[a-zA-Z0-9]+$/) &&
-      req.method === "DELETE"
-    ) {
-      const cityId = pathname.split("/").pop();
-      await prisma.city.delete({ where: { id: cityId } });
-      return res.status(200).json({ success: true });
+    // DELETE city
+    if (pathname.startsWith("/api/cities/") && method === "DELETE") {
+      const parts = pathname.split("/");
+      const cityId = parts[parts.length - 1];
+
+      console.log("→ Deleting city:", cityId);
+
+      if (!cityId || cityId === "cities") {
+        console.log("✗ Invalid city ID");
+        return res.status(400).json({ error: "Invalid city ID" });
+      }
+
+      try {
+        await prisma.city.delete({
+          where: { id: cityId },
+        });
+        console.log("✓ City deleted successfully");
+        return res.status(200).json({ success: true, message: "City deleted" });
+      } catch (error) {
+        console.error("✗ Error deleting city:", error.message);
+        return res.status(500).json({
+          error: "Failed to delete city",
+          details: error.message,
+        });
+      }
     }
 
-    // ----- ACTIVITIES -----
-    if (pathname === "/api/activities" && req.method === "POST") {
+    // ====================
+    // ACTIVITIES
+    // ====================
+
+    // POST new activity
+    if (pathname === "/api/activities" && method === "POST") {
+      console.log("→ Creating activity");
       const { cityId, name, type, color, startTime, endTime, notes, date } =
         req.body;
       const activity = await prisma.activity.create({
@@ -137,44 +210,81 @@ export default async function handler(req, res) {
           date,
         },
       });
+      console.log("✓ Created activity:", activity.id);
       return res.status(201).json(activity);
     }
 
-    // UPDATE activity by ID in URL
-    if (
-      pathname.match(/^\/api\/activities\/[a-zA-Z0-9]+$/) &&
-      req.method === "PATCH"
-    ) {
-      const activityId = pathname.split("/").pop();
+    // PATCH activity
+    if (pathname.startsWith("/api/activities/") && method === "PATCH") {
+      const parts = pathname.split("/");
+      const activityId = parts[parts.length - 1];
+
+      console.log("→ Updating activity:", activityId);
       const { name, type, color, startTime, endTime, notes } = req.body;
-      const activity = await prisma.activity.update({
-        where: { id: activityId },
-        data: {
-          name,
-          type,
-          color,
-          startTime,
-          endTime,
-          notes,
-        },
-      });
-      return res.status(200).json(activity);
+
+      try {
+        const activity = await prisma.activity.update({
+          where: { id: activityId },
+          data: { name, type, color, startTime, endTime, notes },
+        });
+        console.log("✓ Activity updated");
+        return res.status(200).json(activity);
+      } catch (error) {
+        console.error("✗ Error updating activity:", error.message);
+        return res.status(500).json({
+          error: "Failed to update activity",
+          details: error.message,
+        });
+      }
     }
 
-    // DELETE activity by ID in URL
-    if (
-      pathname.match(/^\/api\/activities\/[a-zA-Z0-9]+$/) &&
-      req.method === "DELETE"
-    ) {
-      const activityId = pathname.split("/").pop();
-      await prisma.activity.delete({ where: { id: activityId } });
-      return res.status(200).json({ success: true });
+    // DELETE activity
+    if (pathname.startsWith("/api/activities/") && method === "DELETE") {
+      const parts = pathname.split("/");
+      const activityId = parts[parts.length - 1];
+
+      console.log("→ Deleting activity:", activityId);
+
+      if (!activityId || activityId === "activities") {
+        console.log("✗ Invalid activity ID");
+        return res.status(400).json({ error: "Invalid activity ID" });
+      }
+
+      try {
+        await prisma.activity.delete({
+          where: { id: activityId },
+        });
+        console.log("✓ Activity deleted successfully");
+        return res
+          .status(200)
+          .json({ success: true, message: "Activity deleted" });
+      } catch (error) {
+        console.error("✗ Error deleting activity:", error.message);
+        return res.status(500).json({
+          error: "Failed to delete activity",
+          details: error.message,
+        });
+      }
     }
 
-    // If no route matched
-    return res.status(404).json({ error: "Not found", pathname });
-  } catch (err) {
-    console.error("API error:", err);
-    return res.status(500).json({ error: err.message, stack: err.stack });
+    // ====================
+    // NO ROUTE MATCHED
+    // ====================
+    console.log("✗ No route matched");
+    return res.status(404).json({
+      error: "Route not found",
+      method: method,
+      pathname: pathname,
+      message: "This API endpoint does not exist",
+    });
+  } catch (error) {
+    console.error("========================================");
+    console.error("💥 SERVER ERROR:", error);
+    console.error("========================================");
+    return res.status(500).json({
+      error: "Internal server error",
+      message: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 }

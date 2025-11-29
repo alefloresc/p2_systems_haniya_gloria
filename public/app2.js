@@ -22,55 +22,61 @@ const addCityModal = document.getElementById("addCityModal");
 const addActivityModal = document.getElementById("addActivityModal");
 
 // API Base URL
-const API_URL = window.location.origin + '/api';
+//const API_URL = window.location.origin + "/api";
+// Use the FULL deployment URL
+//const API_URL = 'https://p2haniyagalejandra-juizppkv8-alejandra-fores-projects.vercel.app/api';
+const API_URL =
+  "https://p2haniyagalejandra-juizppkv8-alejandra-fores-projects.vercel.app/api";
 
 // Log startup info
-console.log('=== APP STARTUP ===');
-console.log('Window origin:', window.location.origin);
-console.log('API_URL:', API_URL);
+console.log("=== APP STARTUP ===");
+console.log("Window origin:", window.location.origin);
+console.log("API_URL:", API_URL);
 
 // Initialize App
 async function init() {
-  console.log('Initializing app');
-  
+  console.log("Initializing app");
+
   // Test API connection
   try {
     const testResponse = await fetch(`${API_URL}/test`);
     const testData = await testResponse.json();
-    console.log('✓ API test successful:', testData);
+    console.log("✓ API test successful:", testData);
   } catch (err) {
-    console.error('✗ API test failed:', err);
+    console.error("✗ API test failed:", err);
   }
-  
+
   await loadTrips();
-  console.log('Setting up event listeners');
+  console.log("Setting up event listeners");
   setupEventListeners();
 }
 
 // API Functions
 async function loadTrips() {
   try {
-    console.log('Loading trips from API');
+    console.log("Loading trips from API");
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
-    const response = await fetch(`${API_URL}/trips`, { signal: controller.signal });
+
+    const response = await fetch(`${API_URL}/trips`, {
+      signal: controller.signal,
+    });
     clearTimeout(timeoutId);
-    
-    console.log('API response status:', response.status);
+
+    console.log("API response status:", response.status);
     if (response.ok) {
       trips = await response.json();
-      console.log('Trips loaded:', trips);
-      console.log('First trip:', trips[0]);
+      console.log("Trips loaded:", trips);
+      console.log("First trip:", trips[0]);
       if (trips.length > 0) {
-        console.log('First trip ID:', trips[0].id);
+        console.log("First trip ID:", trips[0].id);
       }
     } else {
-      console.error('Failed to load trips:', response.status);
+      console.error("Failed to load trips:", response.status);
       trips = [];
     }
   } catch (err) {
-    console.error('Failed to load trips:', err.message);
+    console.error("Failed to load trips:", err.message);
     // Fallback to empty array
     trips = [];
   }
@@ -79,147 +85,161 @@ async function loadTrips() {
 
 async function saveTrip(tripData) {
   try {
-    console.log('Saving trip:', tripData);
-    console.log('API_URL:', API_URL);
+    console.log("Saving trip:", tripData);
+    console.log("API_URL:", API_URL);
     const response = await fetch(`${API_URL}/trips`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tripData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tripData),
     });
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
     if (response.ok) {
       const newTrip = await response.json();
-      console.log('Trip saved successfully:', newTrip);
+      console.log("Trip saved successfully:", newTrip);
       trips.push(newTrip);
       return newTrip;
     } else {
       const errorText = await response.text();
-      console.error('API error:', response.status, errorText);
+      console.error("API error:", response.status, errorText);
       throw new Error(`API error: ${response.status} - ${errorText}`);
     }
   } catch (err) {
-    console.error('Failed to save trip:', err);
+    console.error("Failed to save trip:", err);
     throw err;
   }
 }
 
 async function deleteTrip(tripId) {
   try {
-    console.log('Deleting trip:', tripId);
+    console.log("Deleting trip:", tripId);
     const response = await fetch(`${API_URL}/trips/${tripId}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
     if (response.ok) {
-      console.log('Trip deleted successfully');
-      trips = trips.filter(t => t.id !== tripId);
+      console.log("Trip deleted successfully");
+      trips = trips.filter((t) => t.id !== tripId);
       renderTrips();
     } else {
-      console.error('Failed to delete trip:', response.status);
+      console.error("Failed to delete trip:", response.status);
+      alert("Failed to delete trip");
     }
   } catch (err) {
-    console.error('Failed to delete trip:', err);
+    console.error("Failed to delete trip:", err);
+    alert("Error deleting trip");
   }
 }
 
 async function saveCity(cityData) {
   try {
     const response = await fetch(`${API_URL}/cities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cityData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cityData),
     });
     if (response.ok) {
       return await response.json();
     }
   } catch (err) {
-    console.error('Failed to save city:', err);
+    console.error("Failed to save city:", err);
   }
 }
 
 async function updateCityPosition(cityId, position) {
   try {
     const response = await fetch(`${API_URL}/cities/${cityId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ position })
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ position }),
     });
     if (response.ok) {
       return await response.json();
     }
   } catch (err) {
-    console.error('Failed to update city position:', err);
+    console.error("Failed to update city position:", err);
   }
 }
 
 async function deleteCity(cityId) {
   try {
-    console.log('Deleting city:', cityId);
+    console.log("Deleting city:", cityId);
     const response = await fetch(`${API_URL}/cities/${cityId}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
+    console.log("Delete city response status:", response.status);
+
     if (response.ok) {
-      console.log('City deleted successfully');
-      currentTrip.cities = currentTrip.cities.filter(c => c.id !== cityId);
+      console.log("City deleted successfully");
+      currentTrip.cities = currentTrip.cities.filter((c) => c.id !== cityId);
       renderCities();
+      return true;
     } else {
-      console.error('Failed to delete city:', response.status);
-      alert('Failed to delete city');
+      const errorData = await response.json();
+      console.error("Failed to delete city:", response.status, errorData);
+      alert("Failed to delete city: " + (errorData.error || "Unknown error"));
+      return false;
     }
   } catch (err) {
-    console.error('Failed to delete city:', err);
-    alert('Error deleting city');
+    console.error("Failed to delete city:", err);
+    alert("Error deleting city: " + err.message);
+    return false;
   }
 }
 
 async function saveActivity(activityData) {
   try {
     const response = await fetch(`${API_URL}/activities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(activityData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(activityData),
     });
     if (response.ok) {
       return await response.json();
     }
   } catch (err) {
-    console.error('Failed to save activity:', err);
+    console.error("Failed to save activity:", err);
   }
 }
 
 async function updateActivity(activityId, activityData) {
   try {
     const response = await fetch(`${API_URL}/activities/${activityId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(activityData)
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(activityData),
     });
     if (response.ok) {
       return await response.json();
     }
   } catch (err) {
-    console.error('Failed to update activity:', err);
+    console.error("Failed to update activity:", err);
   }
 }
 
 async function deleteActivity(activityId) {
   try {
-    console.log('Deleting activity with ID:', activityId);
+    console.log("Deleting activity with ID:", activityId);
     const response = await fetch(`${API_URL}/activities/${activityId}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
-    console.log('Delete response status:', response.status);
+    console.log("Delete response status:", response.status);
+    console.log("Delete response ok:", response.ok);
+
     if (response.ok) {
-      console.log('Activity deleted successfully');
-      currentCity.activities = currentCity.activities.filter(a => a.id !== activityId);
-      renderTimeline();
+      console.log("Activity deleted successfully");
+      return true; // Return success
     } else {
-      console.error('Failed to delete activity:', response.status);
-      alert('Failed to delete activity');
+      const errorData = await response.json();
+      console.error("Failed to delete activity:", response.status, errorData);
+      alert(
+        "Failed to delete activity: " + (errorData.error || "Unknown error")
+      );
+      return false;
     }
   } catch (err) {
-    console.error('Failed to delete activity:', err);
-    alert('Error deleting activity');
+    console.error("Failed to delete activity:", err);
+    alert("Error deleting activity: " + err.message);
+    return false;
   }
 }
 
@@ -286,11 +306,6 @@ function setupEventListeners() {
     openActivityModal();
   });
 
-  // Close timeline button - removed, use back button instead
-  // document.getElementById('closeTimelineBtn').addEventListener('click', () => {
-  //     showView('tripDetail');
-  // });
-
   // Transport button selection
   setupTransportButtons();
 
@@ -314,21 +329,12 @@ function setupActivityTypeButtons() {
   document.addEventListener("click", (e) => {
     if (e.target.classList.contains("activity-type-btn")) {
       const container = e.target.parentElement;
-      const isCurrentlySelected = e.target.classList.contains("selected");
-
-      // Remove selected state from all buttons
       container.querySelectorAll(".activity-type-btn").forEach((btn) => {
         btn.classList.remove("selected");
-        btn.style.backgroundColor = "";
       });
-
-      // If the button wasn't selected, select it now
-      // If it was selected, we've already deselected it above
-      if (!isCurrentlySelected) {
-        e.target.classList.add("selected");
-        const color = e.target.dataset.color;
-        e.target.style.backgroundColor = color;
-      }
+      e.target.classList.add("selected");
+      const color = e.target.dataset.color;
+      e.target.style.backgroundColor = color;
     }
   });
 }
@@ -367,17 +373,12 @@ function handleBack() {
 function renderTrips() {
   tripsList.innerHTML = "";
 
-  console.log('Rendering trips:', trips);
-
   // Render existing trips
   trips.forEach((trip) => {
-    console.log('Rendering trip:', trip.id, trip.name);
     const card = document.createElement("div");
     card.className = "trip-card filled";
     card.draggable = true;
-    // Store the trip ID on the card
-    card.setAttribute('data-trip-id', trip.id);
-    card.dataset.tripIndex = trip.id;
+    card.dataset.tripId = trip.id; // ✅ FIXED: Store trip ID here
     card.innerHTML = `
             <img src="icons/yellow_folder_icon.svg" class="folder-icon" alt="Trip folder">
             <h2>${trip.name || "New Trip"}</h2>
@@ -418,7 +419,7 @@ function handleTripDragStart(e) {
 }
 
 function handleTripDragEnd(e) {
-  console.log('handleTripDragEnd called');
+  console.log("handleTripDragEnd called");
   e.target.classList.remove("dragging");
   e.target.style.opacity = "1";
   trashZone.classList.remove("active");
@@ -429,19 +430,15 @@ function handleTripDragEnd(e) {
   const y = e.clientY;
 
   if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-    // Find the trip by looking at the card element
-    const tripCard = e.target.closest('.trip-card');
-    if (!tripCard) return;
-    
-    const tripIndex = Array.from(tripsList.querySelectorAll('.trip-card.filled')).indexOf(tripCard);
-    console.log('Trip index:', tripIndex);
-    
-    if (tripIndex >= 0 && tripIndex < trips.length) {
-      const trip = trips[tripIndex];
-      console.log('Deleting trip:', trip);
-      if (confirm("Are you sure you want to delete this trip?")) {
-        deleteTrip(trip.id);
-      }
+    // ✅ FIXED: Get trip ID from dataset instead of calculating index
+    const tripCard = e.target.closest(".trip-card");
+    if (!tripCard || !tripCard.dataset.tripId) return;
+
+    const tripId = tripCard.dataset.tripId;
+    console.log("Deleting trip with ID:", tripId);
+
+    if (confirm("Are you sure you want to delete this trip?")) {
+      deleteTrip(tripId);
     }
   }
 
@@ -528,15 +525,13 @@ function addCityEntryToModal() {
 }
 
 function handleSaveTrip() {
-  console.log('handleSaveTrip called');
   const tripName = document.getElementById("tripName").value;
-  const saveTripBtn = document.getElementById("saveTripBtn");
-  
-  // Disable button to prevent multiple clicks
-  saveTripBtn.disabled = true;
-  saveTripBtn.style.opacity = '0.5';
-  
   const cityEntries = document.querySelectorAll("#citiesContainer .city-entry");
+  const saveTripBtn = document.getElementById("saveTripBtn");
+
+  // Disable button to prevent double-clicks
+  saveTripBtn.disabled = true;
+  saveTripBtn.style.opacity = "0.5";
 
   const cities = [];
   cityEntries.forEach((entry, index) => {
@@ -553,39 +548,41 @@ function handleSaveTrip() {
         transport: transport,
         startDate: startDate,
         endDate: endDate,
-        position: { x: 100 + index * 250, y: 300 + index * 50 }
+        position: { x: 100 + index * 250, y: 300 + index * 50 },
       });
     }
   });
 
-  console.log('Cities collected:', cities);
+  console.log("Cities collected:", cities);
   if (cities.length > 0) {
     const tripData = {
       name: tripName || "New Trip",
-      cities: cities
+      cities: cities,
     };
 
-    console.log('Calling saveTrip with:', tripData);
-    saveTrip(tripData).then(() => {
-      console.log('Trip saved, re-rendering');
-      renderTrips();
-      addTripModal.classList.remove("active");
-      // Re-enable button
-      saveTripBtn.disabled = false;
-      saveTripBtn.style.opacity = '1';
-      alert('Trip saved successfully!');
-    }).catch(err => {
-      console.error('Error saving trip:', err);
-      alert('Error saving trip: ' + err.message);
-      // Re-enable button on error
-      saveTripBtn.disabled = false;
-      saveTripBtn.style.opacity = '1';
-    });
+    console.log("Calling saveTrip with:", tripData);
+    saveTrip(tripData)
+      .then(() => {
+        console.log("Trip saved, re-rendering");
+        renderTrips();
+        addTripModal.classList.remove("active");
+        // Re-enable button
+        saveTripBtn.disabled = false;
+        saveTripBtn.style.opacity = "1";
+        alert("Trip saved successfully!");
+      })
+      .catch((err) => {
+        console.error("Error saving trip:", err);
+        alert("Error saving trip: " + err.message);
+        // Re-enable button on error
+        saveTripBtn.disabled = false;
+        saveTripBtn.style.opacity = "1";
+      });
   } else {
-    alert('Please add at least one city with dates');
+    alert("Please add at least one city with dates");
     // Re-enable button
     saveTripBtn.disabled = false;
-    saveTripBtn.style.opacity = '1';
+    saveTripBtn.style.opacity = "1";
   }
 }
 
@@ -614,8 +611,8 @@ function renderCities() {
   currentTrip.cities.forEach((city, index) => {
     const tab = document.createElement("div");
     tab.className = "city-tab";
-    const x = city.posX || (100 + index * 250);
-    const y = city.posY || (300 + index * 50);
+    const x = city.posX || 100 + index * 250;
+    const y = city.posY || 300 + index * 50;
     tab.style.left = x + "px";
     tab.style.top = y + "px";
 
@@ -663,8 +660,8 @@ function renderCities() {
 
   if (currentTrip.cities.length > 0) {
     const lastCity = currentTrip.cities[currentTrip.cities.length - 1];
-    const lastX = lastCity.posX || (100 + (currentTrip.cities.length - 1) * 250);
-    const lastY = lastCity.posY || (300 + (currentTrip.cities.length - 1) * 50);
+    const lastX = lastCity.posX || 100 + (currentTrip.cities.length - 1) * 250;
+    const lastY = lastCity.posY || 300 + (currentTrip.cities.length - 1) * 50;
     addBtn.style.left = lastX + 300 + "px";
     addBtn.style.top = lastY + "px";
   } else {
@@ -682,8 +679,8 @@ function renderCities() {
   label.className = "add-city-label";
   if (currentTrip.cities.length > 0) {
     const lastCity = currentTrip.cities[currentTrip.cities.length - 1];
-    const lastX = lastCity.posX || (100 + (currentTrip.cities.length - 1) * 250);
-    const lastY = lastCity.posY || (300 + (currentTrip.cities.length - 1) * 50);
+    const lastX = lastCity.posX || 100 + (currentTrip.cities.length - 1) * 250;
+    const lastY = lastCity.posY || 300 + (currentTrip.cities.length - 1) * 50;
     label.style.left = lastX + 380 + "px";
     label.style.top = lastY + 30 + "px";
   } else {
@@ -795,7 +792,6 @@ function handleDragStart(e) {
 }
 
 function handleDragEnd(e) {
-  console.log('handleDragEnd called for city');
   e.target.classList.remove("dragging");
   e.target.classList.remove("over-trash");
   trashZone.classList.remove("active");
@@ -805,17 +801,8 @@ function handleDragEnd(e) {
   const x = e.clientX;
   const y = e.clientY;
 
-  console.log('Drop position:', x, y);
-  console.log('Trash zone:', rect.left, rect.right, rect.top, rect.bottom);
-
   if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-    // Find the city by looking at the cities array
-    const cityId = e.target.dataset.cityId;
-    console.log('Deleting city with ID:', cityId);
-    
-    if (confirm("Are you sure you want to delete this city?")) {
-      deleteCity(cityId).catch(err => console.error('Error:', err));
-    }
+    deleteCity(e.target.dataset.cityId);
   } else {
     // Update position
     const cityId = e.target.dataset.cityId;
@@ -824,12 +811,10 @@ function handleDragEnd(e) {
       const canvas = citiesCanvas.getBoundingClientRect();
       const newX = e.clientX - canvas.left - 100;
       const newY = e.clientY - canvas.top - 40;
-      console.log('Updating city position:', cityId, newX, newY);
-      updateCityPosition(cityId, { x: newX, y: newY }).then(updatedCity => {
-        city.posX = updatedCity.posX;
-        city.posY = updatedCity.posY;
-        renderCities();
-      });
+      city.posX = newX;
+      city.posY = newY;
+      updateCityPosition(cityId, { x: newX, y: newY });
+      renderCities();
     }
   }
 
@@ -887,8 +872,8 @@ function handleSaveCity() {
     if (currentTrip.cities && currentTrip.cities.length > 0) {
       const lastCity = currentTrip.cities[currentTrip.cities.length - 1];
       newPosition = {
-        x: lastCity.posX + 300,
-        y: lastCity.posY + 50,
+        x: (lastCity.posX || 100) + 300,
+        y: (lastCity.posY || 300) + 50,
       };
     }
 
@@ -898,10 +883,10 @@ function handleSaveCity() {
       transport: transport,
       startDate: startDate,
       endDate: endDate,
-      position: newPosition
+      position: newPosition,
     };
 
-    saveCity(cityData).then(newCity => {
+    saveCity(cityData).then((newCity) => {
       currentTrip.cities.push(newCity);
       renderCities();
       addCityModal.classList.remove("active");
@@ -990,7 +975,7 @@ function createActivityBlock(activity) {
     trashZone.classList.add("active");
   });
 
-  block.addEventListener("dragend", (e) => {
+  block.addEventListener("dragend", async (e) => {
     block.classList.remove("dragging");
     trashZone.classList.remove("active");
 
@@ -1007,12 +992,18 @@ function createActivityBlock(activity) {
     ) {
       // Delete the activity
       const activityId = block.dataset.activityId;
-      console.log('Deleting activity:', activityId);
-      currentCity.activities = currentCity.activities.filter(
-        (a) => a.id !== activityId
-      );
-      deleteActivity(activityId);
-      renderTimeline();
+      console.log("Deleting activity via drag:", activityId);
+
+      // Call delete API and wait for response
+      const success = await deleteActivity(activityId);
+
+      // Only update UI if deletion was successful
+      if (success) {
+        currentCity.activities = currentCity.activities.filter(
+          (a) => a.id !== activityId
+        );
+        renderTimeline();
+      }
     }
   });
 
@@ -1087,8 +1078,8 @@ function handleSaveActivity() {
         endTime,
         notes,
         color,
-        type
-      }).then(updatedActivity => {
+        type,
+      }).then((updatedActivity) => {
         Object.assign(editingActivity, updatedActivity);
         // Update the date if it changed
         editingActivity.date = dateString;
@@ -1105,10 +1096,10 @@ function handleSaveActivity() {
         startTime,
         endTime,
         notes,
-        date: dateString
+        date: dateString,
       };
 
-      saveActivity(activityData).then(newActivity => {
+      saveActivity(activityData).then((newActivity) => {
         if (!currentCity.activities) {
           currentCity.activities = [];
         }
@@ -1118,15 +1109,21 @@ function handleSaveActivity() {
       });
     }
   } else {
-    alert('Please fill in all fields');
+    alert("Please fill in all fields");
   }
 }
 
-function handleDeleteActivity() {
+async function handleDeleteActivity() {
   if (editingActivity) {
-    deleteActivity(editingActivity.id);
-    addActivityModal.classList.remove("active");
-    editingActivity = null;
+    const success = await deleteActivity(editingActivity.id);
+    if (success) {
+      currentCity.activities = currentCity.activities.filter(
+        (a) => a.id !== editingActivity.id
+      );
+      renderTimeline();
+      addActivityModal.classList.remove("active");
+      editingActivity = null;
+    }
   }
 }
 
